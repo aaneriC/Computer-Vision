@@ -32,3 +32,37 @@ config = rs.config()
 config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30) 
 pipeline.start(config)
 
+
+#if variables are working
+try:
+
+    while True:
+        #wait for frame
+        frames = pipeline.wait_for_frames()
+        color_frame = frames.get_color_frame()
+
+        if not color_frame:
+            continue
+
+        #convert obtained image into OpenCV image
+        color_image = np.asanyarray(color_frame.get_data())
+
+        #pass image to YOLO11 model
+        results = model(color_image, stream = True)
+    
+        for result in results:
+            #segmentation images
+            annotated_frame = result.plot()
+
+        #Output from YOLO
+        cv2.imshow("YOLO11 Output", annotated_frame)
+
+        #wait to quit
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+#always run this section of code
+finally:
+    print("stopping")
+    pipeline.stop
+    cv2.destroyAllWindows()
