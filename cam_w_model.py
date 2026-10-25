@@ -6,8 +6,8 @@ import pyrealsense2 as rs
 from ultralytics import YOLO
 
 #define the .pt model
-model = YOLO("best.pt")
-min_thresh =  0.6 # minimum confidence level model can output
+model = YOLO("best2.pt")
+min_thresh =  0.5 # minimum confidence level model can output
 
 #configure D435i camera pipeline for streaming
 pipeline = rs.pipeline()
@@ -31,7 +31,14 @@ if device.supports(rs.camera_info.usb_type_descriptor):
 
 
 #enable RGB stream; define resolution & FPS
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30) 
+config.enable_stream(
+     rs.stream.color, 
+     1920, 
+     1080, 
+     rs.format.bgr8, 
+     30)
+
+ 
 pipeline.start(config)
 #if variables are working
 
@@ -49,8 +56,15 @@ try:
         color_image = np.asanyarray(color_frame.get_data())
 
         #pass image to YOLO11 model
-        results = model(color_image, stream = True)
-    
+        #results = model(color_image, stream = True)
+        results = model.predict(
+            source=color_image,
+            imgsz=1024,
+            conf=min_thresh,
+            retina_masks=True,
+            verbose=False
+        )
+
         for result in results:
             #segmentation images
             annotated_frame = result.plot()
@@ -65,5 +79,5 @@ try:
 #always run this section of code
 finally:
     print("stopping")
-    pipeline.stop
+    pipeline.stop()
     cv2.destroyAllWindows()
